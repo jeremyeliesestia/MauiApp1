@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,6 +80,7 @@ namespace MauiApp1
             await Init();
             return await Database.DeleteAsync(item);
         }
+
 
         public async Task<int> DeleteAllItemsAsync()
         {

@@ -1,106 +1,82 @@
-﻿
+﻿using SQLite;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace MauiApp1
 {
     public partial class MainPage : ContentPage
     {
         int count = 0;
-        ObservableCollection<string> items = new ObservableCollection<string>();
+        int idSelected = -1;
+        ObservableCollection<TodoItem> items = new ObservableCollection<TodoItem>();
+        ObservableCollection<String> itemsName = new ObservableCollection<String>();
+        TodoItemDatabase database = new TodoItemDatabase();
+        //PrimaryKeyAttribute primaryKeyAttribute = new PrimaryKeyAttribute();
 
         public MainPage()
         {
             InitializeComponent();
-            LoadItemsFromTextFile();
-            StudentList.ItemsSource = items;
+            LoadItemsFromDatabase();
+
+            //put Name of all ToDoItem in items to the StudentList
+
+            StudentList.ItemsSource = itemsName;
         }
 
-        private void LoadItemsFromTextFile()
+        private async void LoadItemsFromDatabase()
         {
+            var todoItems = await database.GetItemsAsync();
             items.Clear();
-            // Chemin relatif du répertoire de données de l'application
-            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            //imprime dans la console le chemin du fichier
-            string filePath = Path.Combine(folderPath, "Student.txt");
-
-            // Lire les lignes du fichier et les ajouter à la liste items
-            try
+            foreach (var item in todoItems)
             {
-                if (File.Exists(filePath))
-                {
-                    using (StreamReader sr = new StreamReader(filePath))
-                    {
-                        string line;
-                        while ((line = sr.ReadLine()) != null)
-                        {
-                            items.Add(line);
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Le fichier Student.txt n'existe pas.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Une erreur s'est produite lors de la lecture du fichier : {ex.Message}");
+                items.Add(item);
+                itemsName.Add(item.Name);
             }
         }
 
-        private void AddNewStudentInTextFile(object sender, EventArgs e)
+        private async void AddNewStudentInDatabase(object sender, EventArgs e)
         {
-            // Chemin relatif du répertoire de données de l'application
-            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string filePath = Path.Combine(folderPath, "Student.txt");
 
-            // Ajouter le nouvel étudiant à la fin du fichier
-            try
-            {
-                using (StreamWriter sw = new StreamWriter(filePath, true))
-                {
-                    sw.WriteLine(StudentNameEntry.Text);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Une erreur s'est produite lors de l'écriture du fichier : {ex.Message}");
-            }
+            if (StudentNameEntry.Text == "" || StudentNameEntry.Text == null)
+                return;
 
-            // Mettre à jour la liste
-            LoadItemsFromTextFile();
+            var todoItem = new TodoItem { Name = StudentNameEntry.Text };
+            await database.SaveItemAsync(todoItem);
+            items.Add(todoItem);
+            itemsName.Add(todoItem.Name);
+
+
+
+
+            // Afficher tous les éléments de la base de données dans la console
+            var allItems = await database.GetItemsAsync();
+            Debug.WriteLine("");
+            foreach (var item in allItems)
+            {
+               Debug.WriteLine($"ID: {item.ID}, Name: {item.Name}, Done: {item.Done}");
+            }
         }
 
-        private void RemoveStudentFromTextFile(object sender, EventArgs e)
+        private async void RemoveStudentFromDatabase(object sender, EventArgs e)
         {
-            // Chemin relatif du répertoire de données de l'application
-            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string filePath = Path.Combine(folderPath, "Student.txt");
+            if (StudentList.SelectedItem == null || idSelected == -1)
+                return;
 
-            // Récupérer le texte de StudentNameEntry.Text
-            string studentName = StudentNameEntry.Text;
+            //var pk = primaryKeyAttribute.Match(idSelected);
 
-            // Supprimer la ligne correspondante dans le fichier
-            try
+            await database.DeleteItemAsync(items[idSelected]);
+            itemsName.RemoveAt(idSelected);
+            idSelected = -1 ;
+            StudentNameEntry.Text = "";
+
+            var allItems = await database.GetItemsAsync();
+            Debug.WriteLine("");
+            foreach (var item in allItems)
             {
-                if (File.Exists(filePath))
-                {
-                    List<string> lines = new List<string>(File.ReadAllLines(filePath));
-                    lines.Remove(studentName);
-                    File.WriteAllLines(filePath, lines);
-                }
-                else
-                {
-                    Console.WriteLine("Le fichier Student.txt n'existe pas.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Une erreur s'est produite lors de la suppression de l'étudiant : {ex.Message}");
+                Debug.WriteLine($"ID: {item.ID}, Name: {item.Name}, Done: {item.Done}");
             }
 
-            // Mettre à jour la liste
-            LoadItemsFromTextFile();
+
         }
 
         private void OnStudentSelected(object sender, SelectedItemChangedEventArgs e)
@@ -108,8 +84,9 @@ namespace MauiApp1
             if (StudentList.SelectedItem == null)
                 return;
 
-            // Mettre à jour le champ StudentNameEntry avec l'élément sélectionné
-            StudentNameEntry.Text = e.SelectedItem.ToString();
+            string selectName = e.SelectedItem.ToString();
+            StudentNameEntry.Text = selectName;
+            idSelected = e.SelectedItemIndex;
         }
 
         private void OnCounterClicked(object sender, EventArgs e)
