@@ -1,5 +1,4 @@
-﻿using SQLite;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace MauiApp1
@@ -7,10 +6,12 @@ namespace MauiApp1
     public partial class MainPage : ContentPage
     {
         int count = 0;
-        int idSelected = -1;
         ObservableCollection<TodoItem> items = new ObservableCollection<TodoItem>();
         ObservableCollection<String> itemsName = new ObservableCollection<String>();
         TodoItemDatabase database = new TodoItemDatabase();
+        private int idSelected;
+        private TodoItem removeID;
+
         //PrimaryKeyAttribute primaryKeyAttribute = new PrimaryKeyAttribute();
 
         public MainPage()
@@ -42,6 +43,7 @@ namespace MauiApp1
 
             var todoItem = new TodoItem { Name = StudentNameEntry.Text };
             await database.SaveItemAsync(todoItem);
+
             items.Add(todoItem);
             itemsName.Add(todoItem.Name);
 
@@ -59,14 +61,20 @@ namespace MauiApp1
 
         private async void RemoveStudentFromDatabase(object sender, EventArgs e)
         {
-            if (StudentList.SelectedItem == null || idSelected == -1)
+            if (StudentList.SelectedItem == null)
                 return;
 
-            //var pk = primaryKeyAttribute.Match(idSelected);
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].ID == idSelected)
+                {
+                    await database.DeleteItemAsync(items[i]);
+                    break;
+                }
+            }
 
-            await database.DeleteItemAsync(items[idSelected]);
-            itemsName.RemoveAt(idSelected);
-            idSelected = -1 ;
+            itemsName.Remove(StudentNameEntry.Text);
+            
             StudentNameEntry.Text = "";
 
             var allItems = await database.GetItemsAsync();
@@ -81,24 +89,21 @@ namespace MauiApp1
 
         private void OnStudentSelected(object sender, SelectedItemChangedEventArgs e)
         {
+
             if (StudentList.SelectedItem == null)
                 return;
 
-            string selectName = e.SelectedItem.ToString();
-            StudentNameEntry.Text = selectName;
-            idSelected = e.SelectedItemIndex;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].Name.ToString() == e.SelectedItem.ToString())
+                {
+                    StudentNameEntry.Text = items[i].Name.ToString();
+                    idSelected = items[i].ID;
+                    break;
+                }
+            }
+
         }
 
-        private void OnCounterClicked(object sender, EventArgs e)
-        {
-            count++;
-
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
-        }
     }
 }
