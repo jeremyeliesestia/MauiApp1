@@ -33,11 +33,10 @@
                 HorizontalOptions="Fill" />
 
             <Button
-               AbsoluteLayout.LayoutBounds="550, 0, 250, 50"
+               AbsoluteLayout.LayoutBounds="150, 500, 500, 50"
                x:Name="FormBtn"
                Text="Generate Form" 
                SemanticProperties.Hint="Counts the number of times you click"
-               Clicked="OnCounterClicked"
                HorizontalOptions="Fill" />
 
             <Entry

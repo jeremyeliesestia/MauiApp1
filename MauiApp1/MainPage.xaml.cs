@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using MauiApp1.Class;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace MauiApp1
@@ -6,11 +7,21 @@ namespace MauiApp1
     public partial class MainPage : ContentPage
     {
         int count = 0;
-        ObservableCollection<TodoItem> items = new ObservableCollection<TodoItem>();
+
+        ObservableCollection<Student> items = new ObservableCollection<Student>();
         ObservableCollection<String> itemsName = new ObservableCollection<String>();
-        TodoItemDatabase database = new TodoItemDatabase();
+        ObservableCollection<Matieres> Matieres = new ObservableCollection<Matieres>();
+        ObservableCollection<SousMatieres> SousMatieres = new ObservableCollection<SousMatieres>();
+        ObservableCollection<Competences> Competences = new ObservableCollection<Competences>();
+        
+
+        StudentDatabase database = new StudentDatabase();
+        MatieresDatabase databaseMatieres = new MatieresDatabase();
+        SousMatieresDatabase databaseSousMatieres = new SousMatieresDatabase();
+        CompetencesDatabase databaseCompetences = new CompetencesDatabase();
+
+
         private int idSelected;
-        private TodoItem removeID;
 
         //PrimaryKeyAttribute primaryKeyAttribute = new PrimaryKeyAttribute();
 
@@ -18,20 +29,50 @@ namespace MauiApp1
         {
             InitializeComponent();
             LoadItemsFromDatabase();
+            LoadMatieresFromDatabase();
+            LoadSousMatieresFromDatabase();
+            LoadCompetencesFromDatabase();
 
-            //put Name of all ToDoItem in items to the StudentList
+            //put Name of all Student in items to the StudentList
 
             StudentList.ItemsSource = itemsName;
         }
 
         private async void LoadItemsFromDatabase()
         {
-            var todoItems = await database.GetItemsAsync();
+            var Students = await database.GetItemsAsync();
             items.Clear();
-            foreach (var item in todoItems)
+            foreach (var item in Students)
             {
                 items.Add(item);
                 itemsName.Add(item.Name);
+            }
+        }
+        private async void LoadMatieresFromDatabase()
+        {
+            var matI = await databaseMatieres.GetItemsAsync();
+            Matieres.Clear();
+            foreach (var mat in matI)
+            {
+                Matieres.Add(mat);
+            }
+        }
+        private async void LoadSousMatieresFromDatabase()
+        {
+            var sousmatI = await databaseSousMatieres.GetItemsAsync();
+            SousMatieres.Clear();
+            foreach (var sousmat in sousmatI)
+            {
+                SousMatieres.Add(sousmat);
+            }
+        }
+        private async void LoadCompetencesFromDatabase()
+        {
+            var compI = await databaseCompetences.GetItemsAsync();
+            Competences.Clear();
+            foreach (var comp in compI)
+            {
+                Competences.Add(comp);
             }
         }
 
@@ -41,11 +82,11 @@ namespace MauiApp1
             if (StudentNameEntry.Text == "" || StudentNameEntry.Text == null)
                 return;
 
-            var todoItem = new TodoItem { Name = StudentNameEntry.Text };
-            await database.SaveItemAsync(todoItem);
+            var Student = new Student { Name = StudentNameEntry.Text };
+            await database.SaveItemAsync(Student);
 
-            items.Add(todoItem);
-            itemsName.Add(todoItem.Name);
+            items.Add(Student);
+            itemsName.Add(Student.Name);
 
 
 
